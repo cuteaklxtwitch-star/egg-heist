@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Egg Heist</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥚</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <script type="importmap">{ "imports": { "three": "/vendor/three/three.module.js" } }</script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <section id="start" class="screen">
+    <div class="start-card">
+      <h1 class="logo">Egg Heist</h1>
+      <p class="tag">Run on your treadmill to get fast, sneak into the canyon, steal eggs from sleeping guardians, hatch pets and get rich. Other players can raid your nests — bonk them!</p>
+      <label for="name">Name</label>
+      <input id="name" maxlength="16" autocomplete="off" placeholder="Your name" />
+      <button id="play" class="play">PLAY</button>
+      <p id="start-msg" class="start-msg" role="status"></p>
+      <div id="acct" class="acct"></div>
+      <div class="servers">
+        <div class="servers-head"><span>Servers</span><button id="new-server" class="new-server">+ New server</button></div>
+        <ul id="server-list"><li class="loading">Loading servers…</li></ul>
+      </div>
+      <p class="keys"><b>WASD</b> move · <b>Arrows</b> / <b>right-drag</b> turn camera · <b>Scroll</b> zoom · <b>Q</b> slow mode · <b>E</b> interact · <b>Click</b> / <b>F</b> swing</p>
+    </div>
+  </section>
+
+  <div id="hud" hidden>
+    <!-- top left -->
+    <div class="tl">
+      <div class="circles">
+        <button id="btn-inv" class="circle" aria-label="Backpack">
+          <svg viewBox="0 0 32 32"><path d="M12 8V6.5a4 4 0 0 1 8 0V8" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M8 13a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v14H8z" fill="#fff"/><rect x="11" y="18" width="10" height="6" rx="1.5" fill="#3a3f4a"/><path d="M11 18v-2h10v2" fill="none" stroke="#3a3f4a" stroke-width="1.5"/><rect x="5" y="16" width="3" height="8" rx="1.5" fill="#fff"/><rect x="24" y="16" width="3" height="8" rx="1.5" fill="#fff"/></svg>
+        </button>
+        <button id="btn-index" class="circle" aria-label="Index">
+          <svg viewBox="0 0 32 32"><path d="M7 6h15a3 3 0 0 1 3 3v17H10a3 3 0 0 1-3-3z" fill="#3b8cff" stroke="#fff" stroke-width="2"/><path d="M10 26a3 3 0 0 1 0-6h15" fill="none" stroke="#fff" stroke-width="2"/></svg>
+        </button>
+      </div>
+      <div class="slow">
+        <span>Slow mode:</span>
+        <button id="slow" class="toggle" role="switch" aria-checked="false" aria-label="Slow mode"><i></i></button>
+      </div>
+      <button id="btn-shop" class="shop"><span class="new">NEW!</span>Shop</button>
+    </div>
+
+    <button id="btn-settings" class="circle tr" aria-label="Settings">
+      <svg viewBox="0 0 32 32"><path fill="#fff" d="M18.6 3l.7 3.3a10 10 0 0 1 2.6 1.5l3.2-1.1 2.6 4.5-2.5 2.3a10 10 0 0 1 0 3l2.5 2.3-2.6 4.5-3.2-1.1a10 10 0 0 1-2.6 1.5l-.7 3.3h-5.2l-.7-3.3a10 10 0 0 1-2.6-1.5l-3.2 1.1-2.6-4.5 2.5-2.3a10 10 0 0 1 0-3L2.3 11.2l2.6-4.5 3.2 1.1a10 10 0 0 1 2.6-1.5L11.4 3zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
+    </button>
+
+    <div class="plist" id="plist">
+      <div class="plist-head"><span><span id="sname">Server 1</span> · <b id="pcount">1/8</b></span><button id="btn-invite" class="invite">Invite</button></div>
+      <ol id="plist-rows"></ol>
+    </div>
+
+    <div class="rside">
+      <button id="btn-eggs" class="sq egg" aria-label="Eggs"><span id="egg-badge" class="badge" hidden>!</span>
+        <svg viewBox="0 0 32 32"><ellipse cx="16" cy="17.5" rx="9" ry="11.5" fill="#fff8ea" stroke="#5a2a14" stroke-width="2"/></svg>
+      </button>
+      <button id="btn-pets" class="sq paw" aria-label="Pets">
+        <svg viewBox="0 0 32 32" fill="#fff" stroke="#5a2a14" stroke-width="1.6"><ellipse cx="16" cy="21" rx="7" ry="6"/><ellipse cx="7.5" cy="14" rx="3" ry="3.8"/><ellipse cx="12.5" cy="8.5" rx="3" ry="3.8"/><ellipse cx="19.5" cy="8.5" rx="3" ry="3.8"/><ellipse cx="24.5" cy="14" rx="3" ry="3.8"/></svg>
+      </button>
+    </div>
+
+    <div class="bl">
+      <div class="speed">
+        <svg viewBox="0 0 40 24" aria-hidden="true"><path d="M3 15c0-3 2-4 4-4h7l4-7c3 1 5 3 6 6l8 3c3 1 5 3 5 5v2H5c-1 0-2-1-2-2z" fill="#2f8cff" stroke="#0b2a66" stroke-width="2"/><path d="M3 18h35" stroke="#fff" stroke-width="2"/></svg>
+        <span id="spd">0</span>
+      </div>
+      <div class="money">$<span id="money">0</span></div>
+      <div class="income">+$<span id="inc">0</span>/s</div>
+      <div id="fb" class="fb" hidden>Friend Boost: +<span id="fbv">0</span>%</div>
+    </div>
+
+    <div class="hotbar"><button id="slot1" class="slot on"><em>1</em>
+      <svg viewBox="0 0 32 32"><path d="M8 26 24 6" stroke="#6b3d1f" stroke-width="3.5" stroke-linecap="round"/><path d="M17 15 25 5" stroke="#a8683a" stroke-width="6" stroke-linecap="round"/></svg>
+    </button></div>
+
+    <div class="br"><span id="cyc-icon" class="moon"></span><span id="cyc">0s</span></div>
+
+    <div id="prompt" class="prompt" hidden></div>
+    <div id="carry" class="carry" hidden></div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <div class="touch">
+      <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+      <div class="tbtns"><button id="t-e" class="round">E</button><button id="t-swing" class="round red">Swing</button></div>
+    </div>
+  </div>
+
+  <dialog id="inv" class="panel">
+    <header><h2>Backpack</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="tabs"><button data-tab="eggs" class="on">Eggs</button><button data-tab="pets">Pets</button></div>
+    <div id="inv-body" class="body"></div>
+  </dialog>
+
+  <dialog id="index" class="panel">
+    <header><h2>Index</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <p class="sub" id="index-count"></p>
+    <div id="index-body" class="grid"></div>
+  </dialog>
+
+  <dialog id="petfuse" class="panel">
+    <header><h2>Pet Fuser</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="body">
+      <div id="pf-slots" class="pf-slots"></div>
+      <p id="pf-result" class="pf-result"></p>
+      <button id="pf-go" class="buy pf-go">FUSE</button>
+      <div class="section">Your pets</div>
+      <div id="pf-list" class="cards"></div>
+    </div>
+  </dialog>
+
+  <dialog id="shop" class="panel">
+    <header><h2>Shop</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="tabs shop-tabs"><button data-stab="up" class="on">Upgrades</button><button data-stab="rb">Rebirth</button><button data-stab="gp">Gamepasses ⭐</button></div>
+    <div id="stab-up">
+      <div class="row">
+        <div><h3>Treadmill Upgrade</h3><p><b id="tread-tier">Basic</b> treadmill, level <b id="tread-lvl">1</b>/<span id="tread-max">33</span> — <b>+<span id="tread-gain">10</span></b> speed per second. Stand on it at your base!</p></div>
+        <button id="buy-tread" class="buy">$0</button>
+      </div>
+      <div class="row">
+        <div><h3>New Nest</h3><p><b id="nest-n">3</b>/<span id="nest-max">10</span> nests. More nests = more eggs hatching at once.</p></div>
+        <button id="buy-nest" class="buy">$0</button>
+      </div>
+    </div>
+    <div id="stab-rb" hidden>
+      <div class="rebirth-box">
+        <div class="rb-big">Rebirth <b id="rb-now">0</b> → <b id="rb-next">1</b></div>
+        <p>You get <b>x<span id="rb-mult">1.5</span> money</b> and <b>x<span id="rb-mult2">1.5</span> speed</b> forever.</p>
+        <p class="rb-warn">Resets: money, speed and your treadmill. <b>Keeps:</b> pets, eggs, nests and gamepasses.</p>
+        <button id="do-rebirth" class="buy rb-btn">$0</button>
+      </div>
+    </div>
+    <div id="stab-gp" hidden>
+      <p class="sub">Gamepasses are paid with real money and saved to your account forever. <b>Ask a parent first!</b></p>
+      <div id="gp-list" class="gp-list"></div>
+    </div>
+  </dialog>
+
+  <dialog id="buypass" class="panel small">
+    <header><h2>Buy gamepass</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="body">
+      <div id="bp-info" class="bp-info"></div>
+      <label class="check"><input type="checkbox" id="bp-parent" /> A parent or guardian is paying or said yes to this purchase.</label>
+      <label class="check"><input type="checkbox" id="bp-now" /> I want the gamepass added right away, and I understand that once it is added I can no longer cancel the purchase.</label>
+      <p id="bp-err" class="err"></p>
+      <button id="bp-go" class="buy pf-go" disabled>Pay with card or BLIK</button>
+      <p class="fine">Payments are handled securely by Stripe. We never see your card details.</p>
+    </div>
+  </dialog>
+
+  <dialog id="account" class="panel small">
+    <header><h2>Account</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="body">
+      <p id="acc-why" class="sub0">An account saves your progress online and lets you use gamepasses on any device.</p>
+      <label for="acc-user">Username</label>
+      <input id="acc-user" maxlength="16" autocomplete="username" placeholder="3-16 letters or numbers" />
+      <label for="acc-pass">Password</label>
+      <input id="acc-pass" type="password" maxlength="100" autocomplete="current-password" placeholder="at least 6 characters" />
+      <p class="fine">Don't use your real name. Kids: ask a parent before making an account.</p>
+      <p id="acc-err" class="err"></p>
+      <div class="acc-btns"><button id="acc-login" class="buy">Log in</button><button id="acc-signup" class="buy alt">Sign up</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="settings" class="panel small">
+    <header><h2>Settings</h2><button class="x" data-close aria-label="Close">✕</button></header>
+    <div class="row"><div><h3>Shadows</h3><p>Turn off if the game is laggy.</p></div><button id="set-shadows" class="buy">On</button></div>
+    <div class="row"><div><h3>Account</h3><p id="set-acct-text">Playing as a guest.</p></div><button id="set-acct" class="buy">Log in</button></div>
+    <div class="row"><div><h3>Change server</h3><p>Go back to the server list. Your progress is kept.</p></div><button id="set-server" class="buy">Servers</button></div>
+    <div class="row"><div><h3>Reset progress</h3><p>Wipes your money, pets and eggs.</p></div><button id="set-reset" class="buy danger">Reset</button></div>
+  </dialog>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
