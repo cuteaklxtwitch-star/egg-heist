@@ -1,0 +1,21 @@
+{
+  "name": "egg-heist",
+  "version": "1.0.0",
+  "description": "Multiplayer browser game: steal eggs, hatch pets, outrun the guardians.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "three": "0.160.0",
+    "pg": "^8.13.1",
+    "stripe": "^17.5.0"
+  }
+}
